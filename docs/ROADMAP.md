@@ -26,7 +26,7 @@ The heart of the app; zero UI. Everything here is pure TypeScript tested against
 | 1.5 | Status state machine: `working` / `awaiting-input` / `idle` / `done` from event stream + recency | table-driven unit tests, one per transition                   |
 | 1.6 | Watcher service: chokidar + debounce, emits `SessionDelta`s                                      | integration test writes to a temp dir, asserts emitted deltas |
 
-## M2 — Mission Control board (first demoable build)
+## M2 — Mission Control board (first demoable build) ✅
 
 | #   | Task                                                                            | Done when                                              |
 | --- | ------------------------------------------------------------------------------- | ------------------------------------------------------ |
