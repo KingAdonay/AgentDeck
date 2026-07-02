@@ -1,4 +1,5 @@
 import type { AgentEvent, SessionState } from './domain'
+import type { GitDiffStats } from './workspace'
 
 /**
  * The complete IPC surface between main and renderer. Every channel is
@@ -13,7 +14,11 @@ export const IpcChannels = {
   /** main → renderer push: SessionsUpdatedPayload */
   sessionsUpdated: 'sessions:updated',
   /** main → renderer push: RevealPayload (notification/tray deep-link) */
-  sessionsReveal: 'sessions:reveal'
+  sessionsReveal: 'sessions:reveal',
+  /** invoke: () → WorkspaceStatsPayload */
+  workspaceSnapshot: 'workspace:snapshot',
+  /** main → renderer push: WorkspaceStatsPayload */
+  workspaceUpdated: 'workspace:updated'
 } as const
 
 export interface SnapshotResponse {
@@ -31,4 +36,9 @@ export interface SessionsUpdatedPayload {
 
 export interface RevealPayload {
   sessionKey: string
+}
+
+export interface WorkspaceStatsPayload {
+  /** Keyed by absolute project path. */
+  stats: Record<string, GitDiffStats>
 }

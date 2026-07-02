@@ -4,7 +4,8 @@ import {
   type EventsResponse,
   type RevealPayload,
   type SessionsUpdatedPayload,
-  type SnapshotResponse
+  type SnapshotResponse,
+  type WorkspaceStatsPayload
 } from '../shared/ipc'
 
 /**
@@ -39,6 +40,18 @@ const api = {
       ipcRenderer.on(IpcChannels.sessionsReveal, listener)
       return () => {
         ipcRenderer.removeListener(IpcChannels.sessionsReveal, listener)
+      }
+    }
+  },
+  workspace: {
+    getSnapshot: (): Promise<WorkspaceStatsPayload> =>
+      ipcRenderer.invoke(IpcChannels.workspaceSnapshot) as Promise<WorkspaceStatsPayload>,
+    onUpdated: (callback: (payload: WorkspaceStatsPayload) => void): (() => void) => {
+      const listener = (_event: IpcRendererEvent, payload: WorkspaceStatsPayload): void =>
+        callback(payload)
+      ipcRenderer.on(IpcChannels.workspaceUpdated, listener)
+      return () => {
+        ipcRenderer.removeListener(IpcChannels.workspaceUpdated, listener)
       }
     }
   }

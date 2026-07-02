@@ -1,5 +1,11 @@
 import { BrowserWindow, ipcMain } from 'electron'
-import { IpcChannels, type SessionsUpdatedPayload, type SnapshotResponse } from '../../shared/ipc'
+import {
+  IpcChannels,
+  type SessionsUpdatedPayload,
+  type SnapshotResponse,
+  type WorkspaceStatsPayload
+} from '../../shared/ipc'
+import type { WorkspaceStatsService } from '../git/diff-stats'
 import type { SessionService } from '../sessions/service'
 
 /**
@@ -27,5 +33,17 @@ export function registerSessionIpc(service: SessionService): () => void {
     unsubscribe()
     ipcMain.removeHandler(IpcChannels.sessionsSnapshot)
     ipcMain.removeHandler(IpcChannels.sessionsEvents)
+  }
+}
+
+export function registerWorkspaceIpc(service: WorkspaceStatsService): void {
+  ipcMain.handle(IpcChannels.workspaceSnapshot, (): WorkspaceStatsPayload => {
+    return { stats: service.getSnapshot() }
+  })
+}
+
+export function broadcastWorkspaceStats(payload: WorkspaceStatsPayload): void {
+  for (const window of BrowserWindow.getAllWindows()) {
+    window.webContents.send(IpcChannels.workspaceUpdated, payload)
   }
 }

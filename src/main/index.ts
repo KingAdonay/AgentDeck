@@ -2,7 +2,8 @@ import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'node:path'
 import { IpcChannels, type RevealPayload } from '../shared/ipc'
 import { ClaudeCodeAdapter } from './agents/claude-code'
-import { registerSessionIpc } from './ipc/register'
+import { WorkspaceStatsService } from './git/diff-stats'
+import { broadcastWorkspaceStats, registerSessionIpc, registerWorkspaceIpc } from './ipc/register'
 import { SessionNotifier } from './notifications/notifier'
 import { installSecurityPolicy } from './security'
 import { SessionService } from './sessions/service'
@@ -97,7 +98,30 @@ void app.whenReady().then(() => {
     setInterval(() => tray.update(sessionService.getSnapshot()), 15_000)
   }
 
-  void sessionService.start().then(() => notifier.start())
+  const workspaceStats = new WorkspaceStatsService()
+  registerWorkspaceIpc(workspaceStats)
+  const refreshWorkspaceStats = async (): Promise<void> => {
+    // Most recently active projects first; absolute paths only (a projectKey
+    // placeholder means no event with a cwd has arrived yet).
+    const paths = [
+      ...new Set(
+        sessionService
+          .getSnapshot()
+          .sort((a, b) => (b.lastActivityAt ?? 0) - (a.lastActivityAt ?? 0))
+          .map((state) => state.projectPath)
+          .filter((path) => path.startsWith('/'))
+      )
+    ].slice(0, 25)
+    if (await workspaceStats.refresh(paths)) {
+      broadcastWorkspaceStats({ stats: workspaceStats.getSnapshot() })
+    }
+  }
+  setInterval(() => void refreshWorkspaceStats(), 10_000)
+
+  void sessionService.start().then(() => {
+    notifier.start()
+    void refreshWorkspaceStats()
+  })
   createWindow()
 
   app.on('activate', () => {
