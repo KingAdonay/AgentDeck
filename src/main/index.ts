@@ -1,12 +1,13 @@
 import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'node:path'
+import { IpcChannels, type RevealPayload } from '../shared/ipc'
 import { ClaudeCodeAdapter } from './agents/claude-code'
 import { registerSessionIpc } from './ipc/register'
 import { installSecurityPolicy } from './security'
 import { SessionService } from './sessions/service'
 import { createMainWindowOptions } from './window'
 
-function createWindow(): void {
+function createWindow(): BrowserWindow {
   const mainWindow = new BrowserWindow(
     createMainWindowOptions(join(__dirname, '../preload/index.js'))
   )
@@ -25,6 +26,24 @@ function createWindow(): void {
   } else {
     void mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+  return mainWindow
+}
+
+/** Bring the app forward and open one session's detail (notification/tray deep-link). */
+function revealSession(sessionKey: string): void {
+  const payload: RevealPayload = { sessionKey }
+  const existing = BrowserWindow.getAllWindows()[0]
+  const window = existing ?? createWindow()
+  if (existing !== undefined) {
+    window.webContents.send(IpcChannels.sessionsReveal, payload)
+  } else {
+    window.webContents.once('did-finish-load', () =>
+      window.webContents.send(IpcChannels.sessionsReveal, payload)
+    )
+  }
+  if (window.isMinimized()) window.restore()
+  window.show()
+  window.focus()
 }
 
 installSecurityPolicy(app)
@@ -54,3 +73,5 @@ app.on('window-all-closed', () => {
 app.on('will-quit', () => {
   void sessionService.stop()
 })
+
+export { revealSession }

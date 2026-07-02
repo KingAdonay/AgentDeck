@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 import {
   IpcChannels,
   type EventsResponse,
+  type RevealPayload,
   type SessionsUpdatedPayload,
   type SnapshotResponse
 } from '../shared/ipc'
@@ -30,6 +31,14 @@ const api = {
       ipcRenderer.on(IpcChannels.sessionsUpdated, listener)
       return () => {
         ipcRenderer.removeListener(IpcChannels.sessionsUpdated, listener)
+      }
+    },
+    /** Deep-link from a notification or tray click; returns an unsubscribe function. */
+    onReveal: (callback: (payload: RevealPayload) => void): (() => void) => {
+      const listener = (_event: IpcRendererEvent, payload: RevealPayload): void => callback(payload)
+      ipcRenderer.on(IpcChannels.sessionsReveal, listener)
+      return () => {
+        ipcRenderer.removeListener(IpcChannels.sessionsReveal, listener)
       }
     }
   }

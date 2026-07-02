@@ -15,6 +15,10 @@ function App(): React.JSX.Element {
     return window.api.sessions.onUpdated((payload) => upsert(payload.sessions))
   }, [hydrate, upsert])
 
+  useEffect(() => {
+    return window.api.sessions.onReveal((payload) => setSelectedKey(payload.sessionKey))
+  }, [])
+
   // Status decays with time even without new events; tick to re-derive it.
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 15_000)

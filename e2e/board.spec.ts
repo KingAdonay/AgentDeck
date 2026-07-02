@@ -65,3 +65,21 @@ test('opens the session detail timeline on card click', async () => {
   await panel.getByRole('button', { name: 'Close details' }).click()
   await expect(panel).not.toBeVisible()
 })
+
+test('reveal deep-link (notification/tray path) opens the session detail', async () => {
+  // Notification clicks call revealSession in main, which pushes this IPC
+  // message; drive the same path from the main process.
+  await app.evaluate(
+    ({ BrowserWindow }, { channel, sessionKey }) => {
+      BrowserWindow.getAllWindows()[0]?.webContents.send(channel, { sessionKey })
+    },
+    {
+      channel: 'sessions:reveal',
+      sessionKey: 'claude-code:-Users-jane-dev-webapp:11111111-1111-1111-1111-111111111111'
+    }
+  )
+
+  const panel = page.getByTestId('detail-panel')
+  await expect(panel).toBeVisible()
+  await expect(panel.getByText('Add dark mode toggle')).toBeVisible()
+})

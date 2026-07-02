@@ -11,7 +11,9 @@ export const IpcChannels = {
   /** invoke: (sessionKey: string) → EventsResponse */
   sessionsEvents: 'sessions:events',
   /** main → renderer push: SessionsUpdatedPayload */
-  sessionsUpdated: 'sessions:updated'
+  sessionsUpdated: 'sessions:updated',
+  /** main → renderer push: RevealPayload (notification/tray deep-link) */
+  sessionsReveal: 'sessions:reveal'
 } as const
 
 export interface SnapshotResponse {
@@ -25,4 +27,8 @@ export interface EventsResponse {
 
 export interface SessionsUpdatedPayload {
   sessions: SessionState[]
+}
+
+export interface RevealPayload {
+  sessionKey: string
 }
