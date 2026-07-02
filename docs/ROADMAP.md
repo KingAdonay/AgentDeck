@@ -13,7 +13,7 @@ Milestone-based. Every task is one commit/PR-sized unit with an explicit accepta
 | 0.5 | README, CONTRIBUTING, ROADMAP, ARCHITECTURE docs                                                | renders correctly on GitHub                                         |
 | 0.6 | Playwright e2e harness (Electron driver) + boot/sandbox/preload smoke tests                     | `npm run test:e2e` green locally and in CI (xvfb)                   |
 
-## M1 — Claude Code adapter (headless core)
+## M1 — Claude Code adapter (headless core) ✅
 
 The heart of the app; zero UI. Everything here is pure TypeScript tested against fixtures.
 
