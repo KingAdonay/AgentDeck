@@ -13,5 +13,14 @@ export async function launchApp(
   for (const [key, value] of Object.entries(process.env)) {
     if (value !== undefined && key !== 'ELECTRON_RUN_AS_NODE') env[key] = value
   }
-  return electron.launch({ args: ['.'], env: { ...env, ...envOverrides } })
+  return electron.launch({
+    args: ['.'],
+    env: {
+      ...env,
+      // Keep e2e runs from spamming the OS notification center / system tray.
+      AGENTDECK_DISABLE_NOTIFICATIONS: '1',
+      AGENTDECK_DISABLE_TRAY: '1',
+      ...envOverrides
+    }
+  })
 }

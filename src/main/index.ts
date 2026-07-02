@@ -3,8 +3,10 @@ import { join } from 'node:path'
 import { IpcChannels, type RevealPayload } from '../shared/ipc'
 import { ClaudeCodeAdapter } from './agents/claude-code'
 import { registerSessionIpc } from './ipc/register'
+import { SessionNotifier } from './notifications/notifier'
 import { installSecurityPolicy } from './security'
 import { SessionService } from './sessions/service'
+import { SettingsStore } from './settings/store'
 import { createMainWindowOptions } from './window'
 
 function createWindow(): BrowserWindow {
@@ -57,8 +59,16 @@ const sessionService = new SessionService([
 ])
 
 void app.whenReady().then(() => {
+  const settings = new SettingsStore(join(app.getPath('userData'), 'settings.json'))
+  const notifier = new SessionNotifier({
+    getStates: () => sessionService.getSnapshot(),
+    getPrefs: () => settings.get().notifications,
+    reveal: revealSession
+  })
+
   registerSessionIpc(sessionService)
-  void sessionService.start()
+  sessionService.onUpdate(() => notifier.tick())
+  void sessionService.start().then(() => notifier.start())
   createWindow()
 
   app.on('activate', () => {
