@@ -1,6 +1,7 @@
 import type { SessionState } from '../../../shared/domain'
 import { deriveStatus } from '../../../shared/status'
-import { formatDuration, relativeTime, shortModel } from '../lib/format'
+import { totalInputTokens } from '../../../shared/usage'
+import { formatDuration, formatTokens, relativeTime, shortModel } from '../lib/format'
 import { StatusBadge } from './StatusBadge'
 
 interface Props {
@@ -37,6 +38,12 @@ export function SessionCard({ state, now, selected, onSelect }: Props): React.JS
           {state.userMessageCount} {state.userMessageCount === 1 ? 'prompt' : 'prompts'} ·{' '}
           {state.toolCallCount} tool {state.toolCallCount === 1 ? 'call' : 'calls'}
         </span>
+        {totalInputTokens(state.usage) > 0 && (
+          <span data-testid="card-tokens">
+            {formatTokens(totalInputTokens(state.usage))} in ·{' '}
+            {formatTokens(state.usage.outputTokens)} out
+          </span>
+        )}
       </div>
 
       <div className="mt-1 text-xs text-zinc-600">

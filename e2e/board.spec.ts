@@ -66,6 +66,31 @@ test('opens the session detail timeline on card click', async () => {
   await expect(panel).not.toBeVisible()
 })
 
+test('filters the board by status', async () => {
+  await expect(page.getByTestId('session-card')).toHaveCount(3)
+
+  // Fixture sessions are all long past — 'working' filter empties the board.
+  await page.getByTestId('filter-working').click()
+  await expect(page.getByTestId('session-card')).toHaveCount(0)
+  await expect(page.getByTestId('empty-filter')).toBeVisible()
+
+  await page.getByTestId('filter-done').click()
+  await expect(page.getByTestId('session-card')).toHaveCount(3)
+
+  await page.getByTestId('filter-all').click()
+  await expect(page.getByTestId('session-card')).toHaveCount(3)
+})
+
+test('shows token rollups and re-sorts by tokens', async () => {
+  // Only the dark-mode session carries usage in the fixtures.
+  await expect(page.getByTestId('card-tokens').first()).toContainText('in ·')
+
+  await page.getByTestId('sort-select').selectOption('tokens')
+  const firstCard = page.getByTestId('session-card').first()
+  await expect(firstCard).toContainText('Add dark mode toggle')
+  await page.getByTestId('sort-select').selectOption('activity')
+})
+
 test('reveal deep-link (notification/tray path) opens the session detail', async () => {
   // Notification clicks call revealSession in main, which pushes this IPC
   // message; drive the same path from the main process.

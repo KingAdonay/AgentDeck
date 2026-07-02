@@ -3,17 +3,36 @@ import { deriveStatus } from '../../shared/status'
 import { Board } from './components/Board'
 import { DetailPanel } from './components/DetailPanel'
 import { Onboarding } from './components/Onboarding'
+import type { BoardSort, StatusFilter } from './lib/boardView'
 import { useSessionsStore } from './store'
 
+const FILTERS: Array<{ value: StatusFilter; label: string }> = [
+  { value: 'all', label: 'All' },
+  { value: 'working', label: 'Working' },
+  { value: 'awaiting-input', label: 'Needs input' },
+  { value: 'idle', label: 'Idle' },
+  { value: 'done', label: 'Done' }
+]
+
 function App(): React.JSX.Element {
-  const { sessions, phase, errorMessage, hydrate, upsert } = useSessionsStore()
+  const { sessions, workspaceStats, phase, errorMessage, hydrate, upsert, setWorkspaceStats } =
+    useSessionsStore()
   const [selectedKey, setSelectedKey] = useState<string | null>(null)
+  const [filter, setFilter] = useState<StatusFilter>('all')
+  const [sort, setSort] = useState<BoardSort>('activity')
   const [now, setNow] = useState(() => Date.now())
 
   useEffect(() => {
     void hydrate()
-    return window.api.sessions.onUpdated((payload) => upsert(payload.sessions))
-  }, [hydrate, upsert])
+    const unsubscribeSessions = window.api.sessions.onUpdated((payload) => upsert(payload.sessions))
+    const unsubscribeWorkspace = window.api.workspace.onUpdated((payload) =>
+      setWorkspaceStats(payload.stats)
+    )
+    return () => {
+      unsubscribeSessions()
+      unsubscribeWorkspace()
+    }
+  }, [hydrate, upsert, setWorkspaceStats])
 
   useEffect(() => {
     return window.api.sessions.onReveal((payload) => setSelectedKey(payload.sessionKey))
@@ -65,12 +84,43 @@ function App(): React.JSX.Element {
           )}
           {phase === 'ready' && sessionList.length === 0 && <Onboarding />}
           {phase === 'ready' && sessionList.length > 0 && (
-            <Board
-              sessions={sessionList}
-              now={now}
-              selectedKey={selectedKey}
-              onSelect={(key) => setSelectedKey((current) => (current === key ? null : key))}
-            />
+            <>
+              <div className="flex items-center gap-2 border-b border-zinc-900 px-6 py-2">
+                {FILTERS.map(({ value, label }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    data-testid={`filter-${value}`}
+                    onClick={() => setFilter(value)}
+                    className={`rounded-full px-3 py-1 text-xs transition-colors ${
+                      filter === value
+                        ? 'bg-zinc-100 font-medium text-zinc-900'
+                        : 'text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+                <select
+                  data-testid="sort-select"
+                  value={sort}
+                  onChange={(event) => setSort(event.target.value as BoardSort)}
+                  className="ml-auto rounded border border-zinc-800 bg-zinc-900 px-2 py-1 text-xs text-zinc-300"
+                >
+                  <option value="activity">Sort: recent activity</option>
+                  <option value="tokens">Sort: tokens</option>
+                </select>
+              </div>
+              <Board
+                sessions={sessionList}
+                workspaceStats={workspaceStats}
+                now={now}
+                filter={filter}
+                sort={sort}
+                selectedKey={selectedKey}
+                onSelect={(key) => setSelectedKey((current) => (current === key ? null : key))}
+              />
+            </>
           )}
         </main>
 

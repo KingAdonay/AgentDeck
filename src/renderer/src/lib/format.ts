@@ -20,6 +20,12 @@ export function shortModel(model: string): string {
   return model.replace(/^claude-/, '')
 }
 
+export function formatTokens(count: number): string {
+  if (count < 1000) return String(count)
+  if (count < 1_000_000) return `${(count / 1000).toFixed(count < 10_000 ? 1 : 0)}k`
+  return `${(count / 1_000_000).toFixed(1)}M`
+}
+
 export function formatDuration(first: number | null, last: number | null): string | null {
   if (first === null || last === null || last <= first) return null
   const minutes = Math.round((last - first) / 60_000)
