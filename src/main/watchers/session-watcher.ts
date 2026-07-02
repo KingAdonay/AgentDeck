@@ -17,9 +17,9 @@ export interface SessionWatcherOptions {
   debounceMs?: number
 }
 
-export interface SessionWatcher {
-  on(event: 'delta', listener: (delta: SessionDelta) => void): this
-  on(event: 'error', listener: (error: unknown) => void): this
+interface WatcherEvents {
+  delta: (delta: SessionDelta) => void
+  error: (error: unknown) => void
 }
 
 /**
@@ -27,7 +27,8 @@ export interface SessionWatcher {
  * chokidar add/change → per-file debounce → JsonlTailer (only new bytes) →
  * adapter.parseLine → emit('delta').
  */
-export class SessionWatcher extends EventEmitter {
+export class SessionWatcher {
+  private readonly emitter = new EventEmitter()
   private watcher: FSWatcher | null = null
   private readonly tailers = new Map<string, JsonlTailer>()
   private readonly pending = new Map<string, NodeJS.Timeout>()
@@ -37,8 +38,19 @@ export class SessionWatcher extends EventEmitter {
     private readonly adapter: AgentAdapter,
     options: SessionWatcherOptions = {}
   ) {
-    super()
     this.debounceMs = options.debounceMs ?? 100
+  }
+
+  on<K extends keyof WatcherEvents>(event: K, listener: WatcherEvents[K]): this {
+    this.emitter.on(event, listener as (...args: unknown[]) => void)
+    return this
+  }
+
+  private emit<K extends keyof WatcherEvents>(
+    event: K,
+    ...args: Parameters<WatcherEvents[K]>
+  ): void {
+    this.emitter.emit(event, ...args)
   }
 
   /** Resolves once the initial scan is complete (existing files produce deltas too). */
