@@ -1,32 +1,7 @@
-import type {
-  AgentEvent,
-  AgentEventKind,
-  AgentKind,
-  AgentSession,
-  TokenUsage
-} from '../agents/types'
+import type { AgentEvent, SessionState, TokenUsage } from '../../shared/domain'
+import type { AgentSession } from '../agents/types'
 
-/** Everything the UI needs to render one session card, derived from events. */
-export interface SessionState {
-  agent: AgentKind
-  sessionId: string
-  transcriptPath: string
-  projectKey: string
-  /** From event cwd when available, else the discovery-time guess. */
-  projectPath: string
-  title: string | null
-  lastPrompt: string | null
-  lastAssistantText: string | null
-  model: string | null
-  gitBranch: string | null
-  lastEventKind: AgentEventKind | null
-  lastActivityAt: number | null
-  userMessageCount: number
-  toolCallCount: number
-  usage: TokenUsage
-  /** Adjacent-dedupe cursor for usage (ADR 0001 §6). */
-  lastUsageMessageId: string | null
-}
+export type { SessionState } from '../../shared/domain'
 
 export function createSessionState(session: AgentSession): SessionState {
   return {
@@ -41,6 +16,7 @@ export function createSessionState(session: AgentSession): SessionState {
     model: null,
     gitBranch: null,
     lastEventKind: null,
+    firstActivityAt: null,
     lastActivityAt: null,
     userMessageCount: 0,
     toolCallCount: 0,
@@ -66,6 +42,7 @@ export function applyEvent(state: SessionState, event: AgentEvent): SessionState
   const next: SessionState = {
     ...state,
     lastEventKind: event.kind,
+    firstActivityAt: state.firstActivityAt ?? event.timestamp,
     lastActivityAt: event.timestamp ?? state.lastActivityAt
   }
 

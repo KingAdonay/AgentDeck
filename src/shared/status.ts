@@ -1,4 +1,4 @@
-import type { AgentEventKind, SessionStatus } from '../agents/types'
+import type { AgentEventKind, SessionStatus } from './domain'
 
 export interface StatusThresholds {
   /** Agent was mid-turn but nothing new for this long → it stalled out. */
@@ -22,7 +22,8 @@ export const DEFAULT_THRESHOLDS: StatusThresholds = {
  * - anything older than doneAfterMs → `done`.
  *
  * Timestamps come from the transcript itself, never file mtimes, so replaying
- * a transcript at any `now` gives deterministic, testable results.
+ * a transcript at any `now` gives deterministic, testable results. The
+ * renderer re-derives status on a ticking clock from the same inputs.
  */
 export function deriveStatus(
   lastEventKind: AgentEventKind | null,

@@ -1,7 +1,10 @@
 import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'node:path'
-import { createMainWindowOptions } from './window'
+import { ClaudeCodeAdapter } from './agents/claude-code'
+import { registerSessionIpc } from './ipc/register'
 import { installSecurityPolicy } from './security'
+import { SessionService } from './sessions/service'
+import { createMainWindowOptions } from './window'
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow(
@@ -26,7 +29,17 @@ function createWindow(): void {
 
 installSecurityPolicy(app)
 
+// Env override lets e2e tests point the app at a fixture projects tree.
+const claudeProjectsRoot = process.env['AGENTDECK_CLAUDE_PROJECTS_DIR']
+const sessionService = new SessionService([
+  claudeProjectsRoot !== undefined && claudeProjectsRoot !== ''
+    ? new ClaudeCodeAdapter(claudeProjectsRoot)
+    : new ClaudeCodeAdapter()
+])
+
 void app.whenReady().then(() => {
+  registerSessionIpc(sessionService)
+  void sessionService.start()
   createWindow()
 
   app.on('activate', () => {
@@ -36,4 +49,8 @@ void app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
+})
+
+app.on('will-quit', () => {
+  void sessionService.stop()
 })

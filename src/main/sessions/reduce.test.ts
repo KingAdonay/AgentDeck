@@ -3,8 +3,8 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { parseClaudeLine } from '../agents/claude-code/parse'
 import type { AgentSession } from '../agents/types'
+import { deriveStatus } from '../../shared/status'
 import { applyEvents, createSessionState } from './reduce'
-import { deriveStatus } from './status'
 
 const session: AgentSession = {
   agent: 'claude-code',

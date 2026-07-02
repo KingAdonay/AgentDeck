@@ -1,20 +1,23 @@
 /**
- * The normalized domain model every agent adapter maps into.
- * This module (and everything under agents/) must stay pure TypeScript —
- * no Electron imports — so it is testable against fixtures with Vitest.
- * See docs/adr/0001-domain-model.md for the reasoning.
+ * Main-process-only agent contracts. The pure domain model lives in
+ * src/shared/domain.ts (shared with preload and renderer); this module adds
+ * the on-disk discovery types and the adapter interface.
+ * See docs/adr/0001-domain-model.md.
  */
+import type { AgentEvent, AgentKind } from '../../shared/domain'
 
-export type AgentKind = 'claude-code' | 'codex-cli'
-
-export type SessionStatus = 'working' | 'awaiting-input' | 'idle' | 'done'
-
-export interface TokenUsage {
-  inputTokens: number
-  outputTokens: number
-  cacheReadInputTokens: number
-  cacheCreationInputTokens: number
-}
+export type {
+  AgentEvent,
+  AgentEventKind,
+  AgentKind,
+  AssistantMessageEvent,
+  SessionMetaEvent,
+  SessionStatus,
+  TokenUsage,
+  ToolCallEvent,
+  ToolResultEvent,
+  UserMessageEvent
+} from '../../shared/domain'
 
 /** A session as discovered on disk, before any transcript parsing. */
 export interface AgentSession {
@@ -32,54 +35,6 @@ export interface AgentSession {
   lastModifiedAt: number
   sizeBytes: number
 }
-
-interface AgentEventBase {
-  /** ms since epoch; null for metadata entries that carry no timestamp. */
-  timestamp: number | null
-}
-
-/** A real prompt typed by the human (IDE/system-injected context is filtered out). */
-export interface UserMessageEvent extends AgentEventBase {
-  kind: 'user-message'
-  text: string
-  cwd?: string
-  gitBranch?: string
-}
-
-export interface AssistantMessageEvent extends AgentEventBase {
-  kind: 'assistant-message'
-  text: string
-  model?: string
-  /** Provider message id; used to deduplicate usage across entries. */
-  messageId?: string
-  usage?: TokenUsage
-}
-
-export interface ToolCallEvent extends AgentEventBase {
-  kind: 'tool-call'
-  toolName: string
-  description?: string
-  model?: string
-  messageId?: string
-  usage?: TokenUsage
-}
-
-export interface ToolResultEvent extends AgentEventBase {
-  kind: 'tool-result'
-  isError: boolean
-}
-
-/** Session-level metadata (title, last prompt) without a timestamp. */
-export interface SessionMetaEvent extends AgentEventBase {
-  kind: 'session-meta'
-  title?: string
-  lastPrompt?: string
-}
-
-export type AgentEvent =
-  UserMessageEvent | AssistantMessageEvent | ToolCallEvent | ToolResultEvent | SessionMetaEvent
-
-export type AgentEventKind = AgentEvent['kind']
 
 /**
  * The contract each supported agent implements. Adding an agent to AgentDeck
