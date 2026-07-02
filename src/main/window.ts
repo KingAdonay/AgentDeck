@@ -4,9 +4,7 @@ import type { BrowserWindowConstructorOptions } from 'electron'
  * Window options live in a pure function so the security posture is
  * unit-testable without booting Electron.
  */
-export function createMainWindowOptions(
-  preloadPath: string
-): BrowserWindowConstructorOptions {
+export function createMainWindowOptions(preloadPath: string): BrowserWindowConstructorOptions {
   return {
     width: 1200,
     height: 800,

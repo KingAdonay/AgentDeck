@@ -23,7 +23,7 @@ function createWindow(): void {
   }
 }
 
-app.whenReady().then(() => {
+void app.whenReady().then(() => {
   createWindow()
 
   app.on('activate', () => {
