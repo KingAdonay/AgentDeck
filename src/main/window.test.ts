@@ -16,4 +16,9 @@ describe('createMainWindowOptions', () => {
   it('loads the given preload script', () => {
     expect(options.webPreferences?.preload).toBe('/path/to/preload.js')
   })
+
+  it('sets a taskbar icon only when one is provided', () => {
+    expect(options.icon).toBeUndefined()
+    expect(createMainWindowOptions('/p.js', '/dev/icon.png').icon).toBe('/dev/icon.png')
+  })
 })

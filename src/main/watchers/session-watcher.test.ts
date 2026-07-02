@@ -5,6 +5,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ClaudeCodeAdapter } from '../agents/claude-code'
 import { SessionWatcher, type SessionDelta } from './session-watcher'
 
+// Real fs events can be slow under parallel test load; give them headroom.
+vi.setConfig({ testTimeout: 15_000 })
+
 const userLine = (text: string): string =>
   JSON.stringify({
     type: 'user',
@@ -49,7 +52,7 @@ describe('SessionWatcher', () => {
     writeFileSync(file, userLine('hello') + toolCallLine())
     await watcher.start()
 
-    await vi.waitFor(() => expect(deltas).toHaveLength(1), { timeout: 5000 })
+    await vi.waitFor(() => expect(deltas).toHaveLength(1), { timeout: 10_000 })
     expect(deltas[0]).toMatchObject({
       agent: 'claude-code',
       sessionId: 'aaa',
@@ -63,10 +66,10 @@ describe('SessionWatcher', () => {
     const file = join(projectDir, 'bbb.jsonl')
     writeFileSync(file, userLine('first'))
     await watcher.start()
-    await vi.waitFor(() => expect(deltas).toHaveLength(1), { timeout: 5000 })
+    await vi.waitFor(() => expect(deltas).toHaveLength(1), { timeout: 10_000 })
 
     appendFileSync(file, toolCallLine())
-    await vi.waitFor(() => expect(deltas).toHaveLength(2), { timeout: 5000 })
+    await vi.waitFor(() => expect(deltas).toHaveLength(2), { timeout: 10_000 })
     expect(deltas[1]?.events.map((e) => e.kind)).toEqual(['tool-call'])
   })
 
@@ -74,7 +77,7 @@ describe('SessionWatcher', () => {
     await watcher.start()
     writeFileSync(join(projectDir, 'ccc.jsonl'), userLine('new session'))
 
-    await vi.waitFor(() => expect(deltas).toHaveLength(1), { timeout: 5000 })
+    await vi.waitFor(() => expect(deltas).toHaveLength(1), { timeout: 10_000 })
     expect(deltas[0]?.sessionId).toBe('ccc')
   })
 

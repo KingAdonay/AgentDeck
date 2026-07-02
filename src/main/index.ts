@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow } from 'electron'
+import { app, shell, BrowserWindow, nativeImage } from 'electron'
 import { join } from 'node:path'
 import { IpcChannels, type RevealPayload } from '../shared/ipc'
 import { ClaudeCodeAdapter } from './agents/claude-code'
@@ -12,9 +12,31 @@ import { SettingsStore } from './settings/store'
 import { AppTray } from './tray/tray'
 import { createMainWindowOptions } from './window'
 
+/**
+ * In dev the running bundle is the stock Electron binary, so the dock/taskbar
+ * would show Electron branding. The dock icon is settable at runtime (macOS);
+ * Windows/Linux take a window icon. Packaged builds get theirs from
+ * electron-builder and need none of this. (The dock *name* comes from the
+ * bundle plist — patched by scripts/patch-dev-electron-name.mjs.)
+ */
+function devIconPath(): string | undefined {
+  if (app.isPackaged) return undefined
+  return join(app.getAppPath(), 'build', 'icon.png')
+}
+
+function applyDevDockIcon(): void {
+  const iconPath = devIconPath()
+  if (iconPath === undefined || process.platform !== 'darwin') return
+  const icon = nativeImage.createFromPath(iconPath)
+  if (!icon.isEmpty()) app.dock?.setIcon(icon)
+}
+
 function createWindow(): BrowserWindow {
   const mainWindow = new BrowserWindow(
-    createMainWindowOptions(join(__dirname, '../preload/index.js'))
+    createMainWindowOptions(
+      join(__dirname, '../preload/index.js'),
+      process.platform === 'darwin' ? undefined : devIconPath()
+    )
   )
 
   mainWindow.on('ready-to-show', () => mainWindow.show())
@@ -66,6 +88,7 @@ const sessionService = new SessionService([
 ])
 
 void app.whenReady().then(() => {
+  applyDevDockIcon()
   const settings = new SettingsStore(join(app.getPath('userData'), 'settings.json'))
   const notifier = new SessionNotifier({
     getStates: () => sessionService.getSnapshot(),
