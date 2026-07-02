@@ -20,6 +20,8 @@ export async function launchApp(
       // Keep e2e runs from spamming the OS notification center / system tray.
       AGENTDECK_DISABLE_NOTIFICATIONS: '1',
       AGENTDECK_DISABLE_TRAY: '1',
+      // Isolate from the developer's real Codex sessions unless a test opts in.
+      AGENTDECK_CODEX_SESSIONS_DIR: '/nonexistent/agentdeck-e2e-codex',
       ...envOverrides
     }
   })

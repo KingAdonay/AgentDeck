@@ -35,7 +35,9 @@ export function applyEvent(state: SessionState, event: AgentEvent): SessionState
     return {
       ...state,
       title: event.title ?? state.title,
-      lastPrompt: event.lastPrompt ?? state.lastPrompt
+      lastPrompt: event.lastPrompt ?? state.lastPrompt,
+      projectPath: event.cwd ?? state.projectPath,
+      gitBranch: event.gitBranch ?? state.gitBranch
     }
   }
 
@@ -49,6 +51,8 @@ export function applyEvent(state: SessionState, event: AgentEvent): SessionState
   switch (event.kind) {
     case 'user-message':
       next.userMessageCount += 1
+      // Doubles as the card title for agents without title metadata (Codex).
+      next.lastPrompt = event.text
       next.projectPath = event.cwd ?? next.projectPath
       next.gitBranch = event.gitBranch ?? next.gitBranch
       break

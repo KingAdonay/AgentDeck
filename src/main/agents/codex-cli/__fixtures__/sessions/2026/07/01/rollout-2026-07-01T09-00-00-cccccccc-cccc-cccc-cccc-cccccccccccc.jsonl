@@ -1,0 +1,15 @@
+{"timestamp":"2026-07-01T09:00:00.000Z","type":"session_meta","payload":{"id":"cccccccc-cccc-cccc-cccc-cccccccccccc","timestamp":"2026-07-01T09:00:00.000Z","cwd":"/Users/jane/dev/api-service","originator":"codex_cli_rs","cli_version":"0.34.0","instructions":null,"git":{"commit_hash":"abc123","branch":"feat/rate-limit","repository_url":"git@github.com:jane/api-service.git"}}}
+{"timestamp":"2026-07-01T09:00:00.100Z","type":"response_item","payload":{"type":"message","role":"developer","content":[{"type":"input_text","text":"You are Codex, a coding agent..."}]}}
+{"timestamp":"2026-07-01T09:00:00.200Z","type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"<environment_context>\n<cwd>/Users/jane/dev/api-service</cwd>\n</environment_context>"}]}}
+{"timestamp":"2026-07-01T09:00:01.000Z","type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"Add rate limiting to the public API endpoints"}]}}
+{"timestamp":"2026-07-01T09:00:01.500Z","type":"turn_context","payload":{"cwd":"/Users/jane/dev/api-service","approval_policy":"on-request","sandbox_policy":{"mode":"workspace-write"},"model":"gpt-5.3-codex","summary":"auto"}}
+{"timestamp":"2026-07-01T09:00:03.000Z","type":"response_item","payload":{"type":"reasoning","summary":[{"type":"summary_text","text":"Looking at the middleware stack first."}],"content":null}}
+{"timestamp":"2026-07-01T09:00:04.000Z","type":"response_item","payload":{"type":"function_call","name":"exec_command","arguments":"{\"command\":[\"bash\",\"-lc\",\"ls src/middleware\"]}","call_id":"call_001"}}
+{"timestamp":"2026-07-01T09:00:04.500Z","type":"response_item","payload":{"type":"function_call_output","call_id":"call_001","output":"{\"output\":\"auth.ts\\nlogging.ts\\n\",\"metadata\":{\"exit_code\":0,\"duration_seconds\":0.1}}"}}
+{"timestamp":"2026-07-01T09:00:05.000Z","type":"response_item","payload":{"type":"local_shell_call","call_id":"call_002","status":"completed","action":{"type":"exec","command":["rg","limiter","src"],"timeout_ms":10000}}}
+{"timestamp":"2026-07-01T09:00:05.500Z","type":"response_item","payload":{"type":"function_call_output","call_id":"call_002","output":"{\"output\":\"\",\"metadata\":{\"exit_code\":1}}"}}
+{"timestamp":"2026-07-01T09:00:06.000Z","type":"event_msg","payload":{"type":"token_count","info":{"total_token_usage":{"input_tokens":8000,"cached_input_tokens":6000,"output_tokens":400},"last_token_usage":{"input_tokens":2000,"cached_input_tokens":1500,"output_tokens":100}}}}
+{"timestamp":"2026-07-01T09:00:06.500Z","type":"event_msg","payload":{"type":"agent_message","message":"Duplicate of the response_item below — must be ignored."}}
+{"timestamp":"2026-07-01T09:00:07.000Z","type":"response_item","payload":{"type":"message","role":"assistant","content":[{"type":"output_text","text":"No limiter exists yet — I'll add a token-bucket middleware and wire it into the public routes."}]}}
+not json at all {{{
+{"timestamp":"2026-07-01T09:00:08.000Z","type":"some_future_type","payload":{"x":1}}

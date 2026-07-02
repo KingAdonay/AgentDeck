@@ -50,11 +50,16 @@ export interface ToolResultEvent extends AgentEventBase {
   isError: boolean
 }
 
-/** Session-level metadata (title, last prompt) without a timestamp. */
+/**
+ * Session-level metadata without a timestamp. Some agents (Codex CLI) carry
+ * workspace context here rather than on user messages.
+ */
 export interface SessionMetaEvent extends AgentEventBase {
   kind: 'session-meta'
   title?: string
   lastPrompt?: string
+  cwd?: string
+  gitBranch?: string
 }
 
 export type AgentEvent =

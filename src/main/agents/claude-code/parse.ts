@@ -1,4 +1,5 @@
 import type { AgentEvent, TokenUsage } from '../types'
+import { isInjectedContent } from '../text'
 
 type Json = Record<string, unknown>
 
@@ -28,15 +29,6 @@ function parseUsage(value: unknown): TokenUsage | undefined {
     cacheReadInputTokens: num(usage['cache_read_input_tokens']),
     cacheCreationInputTokens: num(usage['cache_creation_input_tokens'])
   }
-}
-
-/**
- * Claude Code logs IDE context, system reminders, and command output as
- * `type: user` entries whose text is wrapped in a tag. Those are not the
- * human speaking (ADR 0001 §5).
- */
-function isInjectedContent(text: string): boolean {
-  return /^\s*<[a-z][\w-]*[\s>]/i.test(text)
 }
 
 /**

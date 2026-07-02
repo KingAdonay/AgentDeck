@@ -2,6 +2,7 @@ import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'node:path'
 import { IpcChannels, type RevealPayload } from '../shared/ipc'
 import { ClaudeCodeAdapter } from './agents/claude-code'
+import { CodexCliAdapter } from './agents/codex-cli'
 import { WorkspaceStatsService } from './git/diff-stats'
 import { broadcastWorkspaceStats, registerSessionIpc, registerWorkspaceIpc } from './ipc/register'
 import { SessionNotifier } from './notifications/notifier'
@@ -52,12 +53,16 @@ function revealSession(sessionKey: string): void {
 
 installSecurityPolicy(app)
 
-// Env override lets e2e tests point the app at a fixture projects tree.
+// Env overrides let e2e tests point the app at fixture trees.
 const claudeProjectsRoot = process.env['AGENTDECK_CLAUDE_PROJECTS_DIR']
+const codexSessionsRoot = process.env['AGENTDECK_CODEX_SESSIONS_DIR']
 const sessionService = new SessionService([
   claudeProjectsRoot !== undefined && claudeProjectsRoot !== ''
     ? new ClaudeCodeAdapter(claudeProjectsRoot)
-    : new ClaudeCodeAdapter()
+    : new ClaudeCodeAdapter(),
+  codexSessionsRoot !== undefined && codexSessionsRoot !== ''
+    ? new CodexCliAdapter(codexSessionsRoot)
+    : new CodexCliAdapter()
 ])
 
 void app.whenReady().then(() => {
