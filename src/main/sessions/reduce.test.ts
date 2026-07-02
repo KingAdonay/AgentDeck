@@ -3,6 +3,7 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { parseClaudeLine } from '../agents/claude-code/parse'
 import type { AgentSession } from '../agents/types'
+import type { AgentEvent } from '../../shared/domain'
 import { deriveStatus } from '../../shared/status'
 import { applyEvents, createSessionState } from './reduce'
 
@@ -76,5 +77,25 @@ describe('reducing the rich fixture', () => {
     expect(fresh.lastEventKind).toBeNull()
     expect(fresh.lastActivityAt).toBeNull()
     expect(fresh.title).toBe('T')
+  })
+
+  it('session-meta model and cumulative usage set state, and snapshots replace rather than accumulate', () => {
+    const snapshot = (inputTokens: number): AgentEvent => ({
+      kind: 'session-meta',
+      timestamp: null,
+      cumulativeUsage: {
+        inputTokens,
+        outputTokens: 400,
+        cacheReadInputTokens: 6000,
+        cacheCreationInputTokens: 0
+      }
+    })
+    const fresh = applyEvents(createSessionState(session), [
+      { kind: 'session-meta', timestamp: null, model: 'gpt-5.3-codex' },
+      snapshot(1000),
+      snapshot(2000)
+    ])
+    expect(fresh.model).toBe('gpt-5.3-codex')
+    expect(fresh.usage.inputTokens).toBe(2000) // latest snapshot wins; 1000 is not added
   })
 })

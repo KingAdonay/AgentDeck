@@ -1,3 +1,4 @@
+import type { TokenUsage } from '../../../shared/domain'
 import type { AgentEvent } from '../types'
 import { isInjectedContent } from '../text'
 
@@ -13,6 +14,10 @@ function asString(value: unknown): string | undefined {
   return typeof value === 'string' ? value : undefined
 }
 
+function asNumber(value: unknown): number | undefined {
+  return typeof value === 'number' && Number.isFinite(value) ? value : undefined
+}
+
 function parseTimestamp(value: unknown): number | null {
   if (typeof value !== 'string') return null
   const ms = Date.parse(value)
@@ -22,10 +27,10 @@ function parseTimestamp(value: unknown): number | null {
 /**
  * Parse one Codex CLI rollout line: {timestamp, type, payload}.
  *
- * Only session_meta, turn_context, and response_item are consumed; event_msg
- * lines duplicate response_items (and carry cumulative token counts that
- * don't fit the per-message usage model), so they are deliberately ignored —
- * Codex sessions currently report zero token usage. Never throws (ADR 0001 §3).
+ * session_meta, turn_context, and response_item are consumed, plus the
+ * token_count subtype of event_msg (as a cumulative usage snapshot). Other
+ * event_msg subtypes duplicate response_items and stay ignored — consuming
+ * them would double-count the timeline. Never throws (ADR 0001 §3).
  */
 export function parseCodexLine(line: string): AgentEvent[] {
   const trimmed = line.trim()
@@ -49,18 +54,42 @@ export function parseCodexLine(line: string): AgentEvent[] {
       return parseContext(payload)
     case 'response_item':
       return parseResponseItem(payload, timestamp)
+    case 'event_msg':
+      return payload['type'] === 'token_count' ? parseTokenCount(payload) : []
     default:
       return []
   }
 }
 
-/** session_meta and turn_context both carry workspace context. */
+/** session_meta and turn_context both carry workspace context; turn_context also names the model. */
 function parseContext(payload: Json): AgentEvent[] {
   const cwd = asString(payload['cwd'])
   const git = asObject(payload['git'])
   const gitBranch = (git ? asString(git['branch']) : undefined) ?? asString(payload['git_branch'])
-  if (cwd === undefined && gitBranch === undefined) return []
-  return [{ kind: 'session-meta', timestamp: null, cwd, gitBranch }]
+  const model = asString(payload['model'])
+  if (cwd === undefined && gitBranch === undefined && model === undefined) return []
+  return [{ kind: 'session-meta', timestamp: null, cwd, gitBranch, model }]
+}
+
+/**
+ * token_count events carry cumulative totals for the whole session, so they
+ * map to a session-meta usage snapshot (replace semantics) rather than
+ * per-message usage. Codex's input_tokens includes cached tokens; TokenUsage
+ * counts cache reads separately, so they are subtracted back out here.
+ */
+function parseTokenCount(payload: Json): AgentEvent[] {
+  const info = asObject(payload['info'])
+  const total = info ? asObject(info['total_token_usage']) : null
+  if (!total) return []
+  const inputTokens = asNumber(total['input_tokens']) ?? 0
+  const cachedInputTokens = asNumber(total['cached_input_tokens']) ?? 0
+  const cumulativeUsage: TokenUsage = {
+    inputTokens: Math.max(0, inputTokens - cachedInputTokens),
+    outputTokens: asNumber(total['output_tokens']) ?? 0,
+    cacheReadInputTokens: cachedInputTokens,
+    cacheCreationInputTokens: 0
+  }
+  return [{ kind: 'session-meta', timestamp: null, cumulativeUsage }]
 }
 
 function parseResponseItem(payload: Json, timestamp: number | null): AgentEvent[] {

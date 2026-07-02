@@ -37,7 +37,9 @@ export function applyEvent(state: SessionState, event: AgentEvent): SessionState
       title: event.title ?? state.title,
       lastPrompt: event.lastPrompt ?? state.lastPrompt,
       projectPath: event.cwd ?? state.projectPath,
-      gitBranch: event.gitBranch ?? state.gitBranch
+      gitBranch: event.gitBranch ?? state.gitBranch,
+      model: event.model ?? state.model,
+      usage: event.cumulativeUsage ?? state.usage
     }
   }
 

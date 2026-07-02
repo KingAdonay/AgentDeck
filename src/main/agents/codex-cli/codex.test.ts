@@ -52,11 +52,12 @@ describe('parseCodexLine on the fixture rollout', () => {
     expect(events.map((e) => e.kind)).toEqual([
       'session-meta', // session_meta: cwd + branch
       'user-message',
-      'session-meta', // turn_context: cwd
+      'session-meta', // turn_context: cwd + model
       'tool-call', // function_call exec_command
       'tool-result', // exit 0
       'tool-call', // local_shell_call
       'tool-result', // exit 1 → error
+      'session-meta', // event_msg token_count: cumulative usage snapshot
       'assistant-message'
     ])
   })
@@ -67,6 +68,28 @@ describe('parseCodexLine on the fixture rollout', () => {
       timestamp: null,
       cwd: '/Users/jane/dev/api-service',
       gitBranch: 'feat/rate-limit'
+    })
+  })
+
+  it('extracts the model from turn_context', () => {
+    expect(events[2]).toEqual({
+      kind: 'session-meta',
+      timestamp: null,
+      cwd: '/Users/jane/dev/api-service',
+      model: 'gpt-5.3-codex'
+    })
+  })
+
+  it('maps token_count totals to a cumulative usage snapshot', () => {
+    expect(events[7]).toEqual({
+      kind: 'session-meta',
+      timestamp: null,
+      cumulativeUsage: {
+        inputTokens: 2000, // 8000 input minus 6000 cached
+        outputTokens: 400,
+        cacheReadInputTokens: 6000,
+        cacheCreationInputTokens: 0
+      }
     })
   })
 
@@ -120,6 +143,13 @@ describe('end-to-end through the reducer (proves the AgentAdapter abstraction)',
     expect(state.gitBranch).toBe('feat/rate-limit')
     expect(state.userMessageCount).toBe(1)
     expect(state.toolCallCount).toBe(2)
+    expect(state.model).toBe('gpt-5.3-codex')
+    expect(state.usage).toEqual({
+      inputTokens: 2000,
+      outputTokens: 400,
+      cacheReadInputTokens: 6000,
+      cacheCreationInputTokens: 0
+    })
     expect(state.lastAssistantText).toContain('token-bucket middleware')
     expect(state.lastEventKind).toBe('assistant-message')
     expect(state.lastActivityAt).toBe(Date.parse('2026-07-01T09:00:07.000Z'))

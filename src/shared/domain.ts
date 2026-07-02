@@ -60,6 +60,9 @@ export interface SessionMetaEvent extends AgentEventBase {
   lastPrompt?: string
   cwd?: string
   gitBranch?: string
+  model?: string
+  /** Cumulative usage snapshot — replaces state.usage rather than accumulating. */
+  cumulativeUsage?: TokenUsage
 }
 
 export type AgentEvent =
