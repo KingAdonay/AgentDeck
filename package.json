@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Mission control for your coding agents — monitor every Claude Code and Codex CLI session from one window.",
   "main": "./out/main/index.js",
-  "author": "Adonay Eshetu",
+  "author": "Adonay Eshetu <adonayeshetu2@gmail.com>",
   "license": "MIT",
   "homepage": "https://github.com/adonayeshetu/agentdeck#readme",
   "scripts": {
@@ -19,7 +19,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck:e2e": "tsc --noEmit -p tsconfig.e2e.json --composite false",
-    "test:e2e": "npm run build && playwright test"
+    "test:e2e": "npm run build && playwright test",
+    "dist": "electron-vite build && electron-builder",
+    "dist:dir": "electron-vite build && electron-builder --dir"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
@@ -31,6 +33,7 @@
     "@vitejs/plugin-react": "^5.2.0",
     "chokidar": "^5.0.0",
     "electron": "^43.0.0",
+    "electron-builder": "^26.15.3",
     "electron-vite": "^5.0.0",
     "eslint": "^9.39.4",
     "eslint-config-prettier": "^10.1.8",
@@ -44,5 +47,6 @@
     "vite": "^7.3.6",
     "vitest": "^4.1.9",
     "zustand": "^5.0.14"
-  }
+  },
+  "repository": "github:adonayeshetu/agentdeck"
 }
