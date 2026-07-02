@@ -52,7 +52,7 @@ The heart of the app; zero UI. Everything here is pure TypeScript tested against
 | 4.2 | Token/cost aggregation from usage entries; session + project rollups   | fixture tests match hand-computed totals |
 | 4.3 | Board filtering/sorting (status, cost, recency)                        | Playwright filter tests                  |
 
-## M5 — Second agent + public release
+## M5 — Second agent + public release (5.1 ✅)
 
 | #   | Task                                                                          | Done when                                     |
 | --- | ----------------------------------------------------------------------------- | --------------------------------------------- |
