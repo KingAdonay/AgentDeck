@@ -21,9 +21,13 @@ export default tseslint.config(
     rules: reactHooks.configs.recommended.rules
   },
   {
-    // Config files are not part of a TS project.
+    // Config files and scripts are plain Node ESM, not part of a TS project.
     files: ['**/*.mjs'],
-    ...tseslint.configs.disableTypeChecked
+    ...tseslint.configs.disableTypeChecked,
+    languageOptions: {
+      ...tseslint.configs.disableTypeChecked.languageOptions,
+      globals: { process: 'readonly', console: 'readonly', Buffer: 'readonly' }
+    }
   },
   prettier
 )

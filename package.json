@@ -21,7 +21,8 @@
     "typecheck:e2e": "tsc --noEmit -p tsconfig.e2e.json --composite false",
     "test:e2e": "npm run build && playwright test",
     "dist": "electron-vite build && electron-builder",
-    "dist:dir": "electron-vite build && electron-builder --dir"
+    "dist:dir": "electron-vite build && electron-builder --dir",
+    "postinstall": "node scripts/patch-dev-electron-name.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
@@ -48,5 +49,6 @@
     "vitest": "^4.1.9",
     "zustand": "^5.0.14"
   },
-  "repository": "github:adonayeshetu/agentdeck"
+  "repository": "github:adonayeshetu/agentdeck",
+  "productName": "AgentDeck"
 }
