@@ -35,7 +35,7 @@ The heart of the app; zero UI. Everything here is pure TypeScript tested against
 | 2.3 | Session detail: virtualized transcript timeline                                 | Playwright: open card → timeline shows fixture events  |
 | 2.4 | Empty / onboarding / error states                                               | Playwright: empty fixture dir → onboarding screen      |
 
-## M3 — Live awareness
+## M3 — Live awareness ✅
 
 | #   | Task                                                                                    | Done when                                                   |
 | --- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
