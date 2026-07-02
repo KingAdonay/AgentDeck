@@ -44,7 +44,7 @@ The heart of the app; zero UI. Everything here is pure TypeScript tested against
 | 3.3 | Notification click → focus app, deep-link to session                                    | Playwright deep-link test                                   |
 | 3.4 | Settings persistence in `userData` (schema-validated JSON)                              | unit tests for defaults + migration                         |
 
-## M4 — Workspace context
+## M4 — Workspace context ✅
 
 | #   | Task                                                                   | Done when                                |
 | --- | ---------------------------------------------------------------------- | ---------------------------------------- |
