@@ -7,6 +7,7 @@ import { SessionNotifier } from './notifications/notifier'
 import { installSecurityPolicy } from './security'
 import { SessionService } from './sessions/service'
 import { SettingsStore } from './settings/store'
+import { AppTray } from './tray/tray'
 import { createMainWindowOptions } from './window'
 
 function createWindow(): BrowserWindow {
@@ -68,6 +69,34 @@ void app.whenReady().then(() => {
 
   registerSessionIpc(sessionService)
   sessionService.onUpdate(() => notifier.tick())
+
+  // Tray creation fails on headless CI and is noise in e2e; opt out via env.
+  if (process.env['AGENTDECK_DISABLE_TRAY'] !== '1') {
+    const tray = new AppTray({
+      reveal: revealSession,
+      openApp: () => {
+        const window = BrowserWindow.getAllWindows()[0] ?? createWindow()
+        if (window.isMinimized()) window.restore()
+        window.show()
+        window.focus()
+      },
+      quit: () => app.quit()
+    })
+    tray.update(sessionService.getSnapshot())
+
+    // Rebuild the menu on updates (debounced against delta storms) and on an
+    // interval so time-decayed statuses stay accurate.
+    let trayTimer: NodeJS.Timeout | null = null
+    sessionService.onUpdate(() => {
+      if (trayTimer !== null) return
+      trayTimer = setTimeout(() => {
+        trayTimer = null
+        tray.update(sessionService.getSnapshot())
+      }, 1000)
+    })
+    setInterval(() => tray.update(sessionService.getSnapshot()), 15_000)
+  }
+
   void sessionService.start().then(() => notifier.start())
   createWindow()
 
