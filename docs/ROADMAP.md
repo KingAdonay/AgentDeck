@@ -11,6 +11,7 @@ Milestone-based. Every task is one commit/PR-sized unit with an explicit accepta
 | 0.3 | Security baseline: hardened BrowserWindow, app-wide navigation/webview/permission lockdown, CSP | unit tests assert window options, policy behavior, and CSP presence |
 | 0.4 | GitHub Actions CI (format, lint, typecheck, test, build)                                        | green check on GitHub                                               |
 | 0.5 | README, CONTRIBUTING, ROADMAP, ARCHITECTURE docs                                                | renders correctly on GitHub                                         |
+| 0.6 | Playwright e2e harness (Electron driver) + boot/sandbox/preload smoke tests                     | `npm run test:e2e` green locally and in CI (xvfb)                   |
 
 ## M1 — Claude Code adapter (headless core)
 
