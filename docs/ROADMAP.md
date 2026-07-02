@@ -52,7 +52,10 @@ The heart of the app; zero UI. Everything here is pure TypeScript tested against
 | 4.2 | Token/cost aggregation from usage entries; session + project rollups   | fixture tests match hand-computed totals |
 | 4.3 | Board filtering/sorting (status, cost, recency)                        | Playwright filter tests                  |
 
-## M5 — Second agent + public release (5.1 ✅)
+## M5 — Second agent + public release (5.1 ✅ · 5.2 ✅ · 5.3 ✅ pending repo)
+
+Remaining before v0.1.0: create the GitHub repository, push, confirm CI green, convert
+[good-first-issues](good-first-issues.md) into labeled issues, record a demo GIF, tag `v0.1.0`.
 
 | #   | Task                                                                          | Done when                                     |
 | --- | ----------------------------------------------------------------------------- | --------------------------------------------- |
