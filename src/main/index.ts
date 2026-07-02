@@ -1,6 +1,7 @@
 import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'node:path'
 import { createMainWindowOptions } from './window'
+import { installSecurityPolicy } from './security'
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow(
@@ -22,6 +23,8 @@ function createWindow(): void {
     void mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
 }
+
+installSecurityPolicy(app)
 
 void app.whenReady().then(() => {
   createWindow()
