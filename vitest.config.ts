@@ -23,7 +23,7 @@ export default defineConfig({
         'src/renderer/src/store.ts'
       ],
       reporter: ['text', 'html', 'lcov'],
-  
+
       // on 2026-07-03; thresholds sit below that to allow honest refactoring headroom.
       thresholds: {
         statements: 80,
