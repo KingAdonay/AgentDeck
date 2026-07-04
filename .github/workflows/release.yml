@@ -10,6 +10,9 @@ on:
 
 jobs:
   build:
+    # Pauses until a required reviewer approves the run
+    # (Settings → Environments → production → Required reviewers).
+    environment: production
     strategy:
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest]

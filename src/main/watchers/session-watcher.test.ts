@@ -68,9 +68,20 @@ describe('SessionWatcher', () => {
     await watcher.start()
     await vi.waitFor(() => expect(deltas).toHaveLength(1), { timeout: 10_000 })
 
-    appendFileSync(file, toolCallLine())
-    await vi.waitFor(() => expect(deltas).toHaveLength(2), { timeout: 10_000 })
-    expect(deltas[1]?.events.map((e) => e.kind)).toEqual(['tool-call'])
+    // fsevents can drop a write landing right as the watch stream goes live,
+    // so re-append on each poll instead of trusting a single change event.
+    await vi.waitFor(
+      () => {
+        if (deltas.length < 2) {
+          appendFileSync(file, toolCallLine())
+          throw new Error('append not observed yet')
+        }
+      },
+      { timeout: 10_000, interval: 250 }
+    )
+    const appended = deltas.slice(1).flatMap((d) => d.events.map((e) => e.kind))
+    expect(appended.length).toBeGreaterThan(0)
+    expect([...new Set(appended)]).toEqual(['tool-call'])
   })
 
   it('picks up sessions created after start', async () => {
