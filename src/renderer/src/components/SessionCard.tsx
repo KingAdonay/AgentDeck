@@ -1,7 +1,13 @@
 import type { SessionState } from '../../../shared/domain'
 import { deriveStatus } from '../../../shared/status'
 import { totalInputTokens } from '../../../shared/usage'
-import { formatDuration, formatTokens, relativeTime, shortModel } from '../lib/format'
+import {
+  formatDuration,
+  formatLineDelta,
+  formatTokens,
+  relativeTime,
+  shortModel
+} from '../lib/format'
 import { StatusBadge } from './StatusBadge'
 
 interface Props {
@@ -14,6 +20,7 @@ interface Props {
 export function SessionCard({ state, now, selected, onSelect }: Props): React.JSX.Element {
   const title = state.title ?? state.lastPrompt ?? `Session ${state.sessionId.slice(0, 8)}`
   const duration = formatDuration(state.firstActivityAt, state.lastActivityAt)
+  const lineDelta = formatLineDelta(state.linesAdded, state.linesRemoved, state.filesTouched.length)
 
   return (
     <button
@@ -44,6 +51,7 @@ export function SessionCard({ state, now, selected, onSelect }: Props): React.JS
             {formatTokens(state.usage.outputTokens)} out
           </span>
         )}
+        {lineDelta !== null && <span data-testid="card-lines">{lineDelta}</span>}
       </div>
 
       <div className="mt-1 text-xs text-zinc-600">

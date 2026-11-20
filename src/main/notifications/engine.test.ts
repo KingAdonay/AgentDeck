@@ -15,6 +15,7 @@ function makeState(overrides: Partial<SessionState>): SessionState {
     projectPath: '/Users/jane/dev/web-app',
     title: 'Fix the login flow',
     lastPrompt: null,
+    firstPrompt: null,
     lastAssistantText: null,
     model: null,
     gitBranch: null,
@@ -29,6 +30,9 @@ function makeState(overrides: Partial<SessionState>): SessionState {
       cacheReadInputTokens: 0,
       cacheCreationInputTokens: 0
     },
+    linesAdded: 0,
+    linesRemoved: 0,
+    filesTouched: [],
     lastUsageMessageId: null,
     ...overrides
   }

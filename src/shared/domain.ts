@@ -14,6 +14,13 @@ export interface TokenUsage {
   cacheCreationInputTokens: number
 }
 
+/** Lines changed in one file by one agent edit (patch / write). */
+export interface FileEdit {
+  path: string
+  added: number
+  removed: number
+}
+
 interface AgentEventBase {
   /** ms since epoch; null for metadata entries that carry no timestamp. */
   timestamp: number | null
@@ -43,11 +50,15 @@ export interface ToolCallEvent extends AgentEventBase {
   model?: string
   messageId?: string
   usage?: TokenUsage
+  /** File edits carried in the call itself (e.g. Codex apply_patch). */
+  edits?: FileEdit[]
 }
 
 export interface ToolResultEvent extends AgentEventBase {
   kind: 'tool-result'
   isError: boolean
+  /** File edits reported by the result (e.g. Claude Code Edit/Write patches). */
+  edits?: FileEdit[]
 }
 
 /**
@@ -80,6 +91,8 @@ export interface SessionState {
   projectPath: string
   title: string | null
   lastPrompt: string | null
+  /** The first human prompt of the session — the basis of the history highlight. */
+  firstPrompt: string | null
   lastAssistantText: string | null
   model: string | null
   gitBranch: string | null
@@ -89,6 +102,11 @@ export interface SessionState {
   userMessageCount: number
   toolCallCount: number
   usage: TokenUsage
+  /** Lines added/removed by the agent's own file edits in this session. */
+  linesAdded: number
+  linesRemoved: number
+  /** Distinct file paths the agent edited. */
+  filesTouched: string[]
   /** Adjacent-dedupe cursor for usage (ADR 0001 §6). */
   lastUsageMessageId: string | null
 }

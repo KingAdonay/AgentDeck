@@ -4,6 +4,9 @@ export default defineConfig({
   test: {
     include: ['src/**/*.test.{ts,tsx}'],
     environment: 'node',
+    // node:sqlite (task history) is behind a flag before Node 22.13; the flag
+    // is accepted and harmless on newer Node. Electron 43 ships it unflagged.
+    execArgv: ['--experimental-sqlite'],
     coverage: {
       provider: 'v8',
       // Count every source file, not just the ones tests happen to import,

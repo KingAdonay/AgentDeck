@@ -1,6 +1,8 @@
 import type { AgentEvent, SessionState } from './domain'
 import type { GitDiffStats } from './workspace'
 
+export type { HistoryListResponse, HistoryQuery, TaskRecord } from './history'
+
 /**
  * The complete IPC surface between main and renderer. Every channel is
  * listed here with its payload types; preload exposes exactly these and
@@ -18,7 +20,9 @@ export const IpcChannels = {
   /** invoke: () → WorkspaceStatsPayload */
   workspaceSnapshot: 'workspace:snapshot',
   /** main → renderer push: WorkspaceStatsPayload */
-  workspaceUpdated: 'workspace:updated'
+  workspaceUpdated: 'workspace:updated',
+  /** invoke: (query: HistoryQuery) → HistoryListResponse */
+  historyList: 'history:list'
 } as const
 
 export interface SnapshotResponse {

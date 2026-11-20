@@ -34,3 +34,22 @@ export function formatDuration(first: number | null, last: number | null): strin
   const hours = Math.floor(minutes / 60)
   return `${hours}h ${minutes % 60}m`
 }
+
+/** Calendar date + time in the user's locale, e.g. 'Nov 9, 2026, 3:04 PM'. */
+export function formatDateTime(timestamp: number | null): string {
+  if (timestamp === null) return '—'
+  return new Date(timestamp).toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit'
+  })
+}
+
+/** '+120 −8 · 3 files'; null when the agent changed nothing. */
+export function formatLineDelta(added: number, removed: number, files: number): string | null {
+  if (added === 0 && removed === 0 && files === 0) return null
+  const filesLabel = `${files} ${files === 1 ? 'file' : 'files'}`
+  return `+${added} −${removed} · ${filesLabel}`
+}

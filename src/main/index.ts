@@ -4,7 +4,14 @@ import { IpcChannels, type RevealPayload } from '../shared/ipc'
 import { ClaudeCodeAdapter } from './agents/claude-code'
 import { CodexCliAdapter } from './agents/codex-cli'
 import { WorkspaceStatsService } from './git/diff-stats'
-import { broadcastWorkspaceStats, registerSessionIpc, registerWorkspaceIpc } from './ipc/register'
+import { HistoryRecorder } from './history/recorder'
+import { HistoryStore } from './history/store'
+import {
+  broadcastWorkspaceStats,
+  registerHistoryIpc,
+  registerSessionIpc,
+  registerWorkspaceIpc
+} from './ipc/register'
 import { SessionNotifier } from './notifications/notifier'
 import { installSecurityPolicy } from './security'
 import { SessionService } from './sessions/service'
@@ -87,8 +94,32 @@ const sessionService = new SessionService([
     : new CodexCliAdapter()
 ])
 
+let historyStore: HistoryStore | null = null
+let historyRecorder: HistoryRecorder | null = null
+
 void app.whenReady().then(() => {
   applyDevDockIcon()
+
+  // Durable task metadata that outlives the agents' own transcripts.
+  // Must subscribe before sessionService.start() so the startup replay backfills it.
+  const historyDbPath = process.env['AGENTDECK_HISTORY_DB']
+  try {
+    const store = new HistoryStore(
+      historyDbPath !== undefined && historyDbPath !== ''
+        ? historyDbPath
+        : join(app.getPath('userData'), 'history.sqlite')
+    )
+    historyStore = store
+    historyRecorder = new HistoryRecorder({
+      onUpdate: (listener) => sessionService.onUpdate(listener),
+      write: (records) => store.upsertMany(records)
+    })
+    historyRecorder.start()
+    registerHistoryIpc(store)
+  } catch (error) {
+    console.error('[agentdeck] task history unavailable:', error)
+  }
+
   const settings = new SettingsStore(join(app.getPath('userData'), 'settings.json'))
   const notifier = new SessionNotifier({
     getStates: () => sessionService.getSnapshot(),
@@ -163,6 +194,8 @@ app.on('window-all-closed', () => {
 
 app.on('will-quit', () => {
   void sessionService.stop()
+  historyRecorder?.stop()
+  historyStore?.close()
 })
 
 export { revealSession }

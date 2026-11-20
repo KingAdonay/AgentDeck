@@ -1,4 +1,4 @@
-import type { AgentEvent, TokenUsage } from '../types'
+import type { AgentEvent, FileEdit, TokenUsage } from '../types'
 import { isInjectedContent } from '../text'
 
 type Json = Record<string, unknown>
@@ -83,11 +83,18 @@ function parseUserEntry(entry: Json): AgentEvent[] {
 
   if (!Array.isArray(content)) return []
   const events: AgentEvent[] = []
+  // toolUseResult describes the entry's (single) tool result in structured form.
+  const edit = parseFileEdit(entry['toolUseResult'])
   for (const rawBlock of content) {
     const block = asObject(rawBlock)
     if (!block) continue
     if (block['type'] === 'tool_result') {
-      events.push({ kind: 'tool-result', timestamp, isError: block['is_error'] === true })
+      const isError = block['is_error'] === true
+      events.push(
+        edit && !isError
+          ? { kind: 'tool-result', timestamp, isError, edits: [edit] }
+          : { kind: 'tool-result', timestamp, isError }
+      )
     } else if (block['type'] === 'text') {
       const text = asString(block['text'])
       if (text !== undefined && !isInjectedContent(text)) {
@@ -96,6 +103,45 @@ function parseUserEntry(entry: Json): AgentEvent[] {
     }
   }
   return events
+}
+
+/**
+ * Edit/Write/MultiEdit results carry `filePath` plus a `structuredPatch` of
+ * diff hunks ({lines: ["+added", "-removed", " context"]}). A Write that
+ * creates a file has an empty patch; its `content` is all added lines.
+ */
+export function parseFileEdit(value: unknown): FileEdit | null {
+  const result = asObject(value)
+  if (!result) return null
+  const path = asString(result['filePath'])
+  if (path === undefined) return null
+  const patch = result['structuredPatch']
+  if (!Array.isArray(patch)) return null
+
+  let added = 0
+  let removed = 0
+  for (const rawHunk of patch) {
+    const lines = asObject(rawHunk)?.['lines']
+    if (!Array.isArray(lines)) continue
+    for (const line of lines) {
+      if (typeof line !== 'string') continue
+      if (line.startsWith('+')) added += 1
+      else if (line.startsWith('-')) removed += 1
+    }
+  }
+
+  const content = asString(result['content'])
+  if (patch.length === 0 && result['type'] === 'create' && content !== undefined) {
+    added = countLines(content)
+  }
+  if (added === 0 && removed === 0) return null
+  return { path, added, removed }
+}
+
+function countLines(text: string): number {
+  if (text === '') return 0
+  const lines = text.split('\n').length
+  return text.endsWith('\n') ? lines - 1 : lines
 }
 
 function parseAssistantEntry(entry: Json): AgentEvent[] {

@@ -11,6 +11,7 @@ export type {
   AgentEventKind,
   AgentKind,
   AssistantMessageEvent,
+  FileEdit,
   SessionMetaEvent,
   SessionStatus,
   TokenUsage,
