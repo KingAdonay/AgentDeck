@@ -1,3 +1,6 @@
+import { mkdtempSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { _electron as electron, type ElectronApplication } from '@playwright/test'
 
 /**
@@ -22,7 +25,14 @@ export async function launchApp(
       AGENTDECK_DISABLE_TRAY: '1',
       // Isolate from the developer's real Codex sessions unless a test opts in.
       AGENTDECK_CODEX_SESSIONS_DIR: '/nonexistent/agentdeck-e2e-codex',
+      // Never write fixture sessions into the developer's real task history.
+      AGENTDECK_HISTORY_DB: tempHistoryDb(),
       ...envOverrides
     }
   })
+}
+
+/** A fresh, empty task-history database path for one launch. */
+export function tempHistoryDb(): string {
+  return join(mkdtempSync(join(tmpdir(), 'agentdeck-e2e-history-')), 'history.sqlite')
 }

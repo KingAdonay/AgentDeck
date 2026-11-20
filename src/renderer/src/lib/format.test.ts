@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { formatDuration, formatTokens, relativeTime, shortenPath, shortModel } from './format'
+import {
+  formatDateTime,
+  formatDuration,
+  formatLineDelta,
+  formatTokens,
+  relativeTime,
+  shortenPath,
+  shortModel
+} from './format'
 
 const NOW = 1_750_000_000_000
 
@@ -114,5 +122,23 @@ describe('formatDuration', () => {
   it('formats hours with a minute remainder', () => {
     expect(formatDuration(NOW, NOW + 60 * 60_000)).toBe('1h 0m')
     expect(formatDuration(NOW, NOW + 125 * 60_000)).toBe('2h 5m')
+  })
+})
+
+describe('formatLineDelta', () => {
+  it('formats additions, removals, and file count', () => {
+    expect(formatLineDelta(120, 8, 3)).toBe('+120 −8 · 3 files')
+    expect(formatLineDelta(1, 0, 1)).toBe('+1 −0 · 1 file')
+  })
+
+  it('returns null when nothing changed', () => {
+    expect(formatLineDelta(0, 0, 0)).toBeNull()
+  })
+})
+
+describe('formatDateTime', () => {
+  it('returns a dash for null and a date string otherwise', () => {
+    expect(formatDateTime(null)).toBe('—')
+    expect(formatDateTime(NOW)).toMatch(/2025/)
   })
 })

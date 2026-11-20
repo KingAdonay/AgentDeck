@@ -18,6 +18,7 @@ You don't know which agent is blocked on an approval prompt, which finished twen
 - **System tray** with aggregate status and a quick-list of recent sessions.
 - **Session detail**: a timeline of prompts, replies, and tool calls (failures highlighted).
 - **Workspace context**: git diff summaries per project worktree and token usage per session and project.
+- **Task history**: a searchable record of every task (title, first-prompt highlight, date, project, branch, model, tokens, lines changed) that survives after Claude Code or Codex deletes its transcripts. Metadata only — transcripts are never copied.
 
 ## Install
 

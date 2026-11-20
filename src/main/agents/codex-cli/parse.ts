@@ -1,6 +1,7 @@
 import type { TokenUsage } from '../../../shared/domain'
-import type { AgentEvent } from '../types'
+import type { AgentEvent, ToolCallEvent } from '../types'
 import { isInjectedContent } from '../text'
+import { extractPatchText, parseApplyPatch } from './apply-patch'
 
 type Json = Record<string, unknown>
 
@@ -99,12 +100,15 @@ function parseResponseItem(payload: Json, timestamp: number | null): AgentEvent[
     case 'function_call': {
       const toolName = asString(payload['name']) ?? 'tool'
       return [
-        {
-          kind: 'tool-call',
-          timestamp,
-          toolName,
-          description: describeArguments(payload['arguments'])
-        }
+        withEdits(
+          {
+            kind: 'tool-call',
+            timestamp,
+            toolName,
+            description: describeArguments(payload['arguments'])
+          },
+          extractPatchText(toolName, payload['arguments'])
+        )
       ]
     }
     case 'local_shell_call': {
@@ -117,7 +121,10 @@ function parseResponseItem(payload: Json, timestamp: number | null): AgentEvent[
     }
     case 'custom_tool_call': {
       const toolName = asString(payload['name']) ?? 'tool'
-      return [{ kind: 'tool-call', timestamp, toolName, description: asString(payload['input']) }]
+      const patch = extractPatchText(toolName, payload['input'])
+      // A patch body is file content, not a useful one-line description.
+      const description = patch === null ? asString(payload['input']) : 'apply_patch'
+      return [withEdits({ kind: 'tool-call', timestamp, toolName, description }, patch)]
     }
     case 'function_call_output':
     case 'custom_tool_call_output':
@@ -126,6 +133,12 @@ function parseResponseItem(payload: Json, timestamp: number | null): AgentEvent[
       // reasoning, web_search_call, and future types are not timeline events.
       return []
   }
+}
+
+function withEdits(event: ToolCallEvent, patch: string | null): ToolCallEvent {
+  if (patch === null) return event
+  const edits = parseApplyPatch(patch)
+  return edits.length > 0 ? { ...event, edits } : event
 }
 
 function parseMessage(payload: Json, timestamp: number | null): AgentEvent[] {

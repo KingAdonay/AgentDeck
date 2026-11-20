@@ -4,5 +4,6 @@
  * wrapped in a tag. Those are not the human speaking (ADR 0001 §5).
  */
 export function isInjectedContent(text: string): boolean {
-  return /^\s*<[a-z][\w-]*[\s>]/i.test(text)
+  // Codex prefixes injected AGENTS.md files with a markdown heading.
+  return /^\s*<[a-z][\w-]*[\s>]/i.test(text) || /^\s*# AGENTS\.md instructions for /.test(text)
 }

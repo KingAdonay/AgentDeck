@@ -71,3 +71,27 @@ describe('registerSessionIpc contract', () => {
     expect(handlers.size).toBe(0)
   })
 })
+
+describe('sanitizeHistoryQuery', () => {
+  it('keeps well-typed fields and clamps sizes', async () => {
+    const { sanitizeHistoryQuery } = await import('./register')
+    expect(
+      sanitizeHistoryQuery({
+        search: '  login ',
+        agent: 'codex-cli',
+        since: 5,
+        limit: 10_000,
+        offset: -3,
+        extra: 'dropped'
+      })
+    ).toEqual({ search: '  login ', agent: 'codex-cli', since: 5, limit: 200, offset: 0 })
+  })
+
+  it('drops junk from an untrusted renderer', async () => {
+    const { sanitizeHistoryQuery } = await import('./register')
+    expect(sanitizeHistoryQuery(null)).toEqual({})
+    expect(
+      sanitizeHistoryQuery({ search: 7, agent: 'rm -rf', since: Infinity, limit: 'all' })
+    ).toEqual({})
+  })
+})

@@ -63,6 +63,12 @@ Remaining before v0.1.0: create the GitHub repository, push, confirm CI green, c
 | 5.2 | electron-builder packaging, icons, release workflow (mac/win/linux)           | tagged release produces installable artifacts |
 | 5.3 | README demo GIF, architecture docs, labeled good-first-issues                 | a stranger can contribute unaided             |
 
+## M5.5 — Task history ✅
+
+| #   | Task                                                                                | Done when                                                       |
+| --- | ----------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| 5.4 | Local SQLite task history (metadata only) + per-session lines changed + History tab | Playwright: tasks still listed after their transcripts are gone |
+
 ## M6 — Interactive control (post-v1, community roadmap)
 
 Launch new sessions into fresh git worktrees (node-pty), respond to approval prompts from the app, session queueing. Deliberately out of v1 scope.

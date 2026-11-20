@@ -2,9 +2,17 @@ import { useEffect, useState } from 'react'
 import { deriveStatus } from '../../shared/status'
 import { Board } from './components/Board'
 import { DetailPanel } from './components/DetailPanel'
+import { HistoryView } from './components/HistoryView'
 import { Onboarding } from './components/Onboarding'
 import type { BoardSort, StatusFilter } from './lib/boardView'
 import { useSessionsStore } from './store'
+
+type View = 'board' | 'history'
+
+const VIEWS: Array<{ value: View; label: string }> = [
+  { value: 'board', label: 'Board' },
+  { value: 'history', label: 'History' }
+]
 
 const FILTERS: Array<{ value: StatusFilter; label: string }> = [
   { value: 'all', label: 'All' },
@@ -21,6 +29,7 @@ function App(): React.JSX.Element {
   const [filter, setFilter] = useState<StatusFilter>('all')
   const [sort, setSort] = useState<BoardSort>('activity')
   const [now, setNow] = useState(() => Date.now())
+  const [view, setView] = useState<View>('board')
 
   useEffect(() => {
     void hydrate()
@@ -35,7 +44,10 @@ function App(): React.JSX.Element {
   }, [hydrate, upsert, setWorkspaceStats])
 
   useEffect(() => {
-    return window.api.sessions.onReveal((payload) => setSelectedKey(payload.sessionKey))
+    return window.api.sessions.onReveal((payload) => {
+      setView('board')
+      setSelectedKey(payload.sessionKey)
+    })
   }, [])
 
   // Status decays with time even without new events; tick to re-derive it.
@@ -55,7 +67,26 @@ function App(): React.JSX.Element {
   return (
     <div className="flex h-screen flex-col bg-zinc-950 text-zinc-100">
       <header className="flex items-center justify-between border-b border-zinc-800 px-6 py-3">
-        <h1 className="text-base font-bold tracking-tight">AgentDeck</h1>
+        <div className="flex items-center gap-4">
+          <h1 className="text-base font-bold tracking-tight">AgentDeck</h1>
+          <nav className="flex rounded-md border border-zinc-800 p-0.5">
+            {VIEWS.map(({ value, label }) => (
+              <button
+                key={value}
+                type="button"
+                data-testid={`view-${value}`}
+                onClick={() => setView(value)}
+                className={`rounded px-3 py-0.5 text-xs transition-colors ${
+                  view === value
+                    ? 'bg-zinc-800 font-medium text-zinc-100'
+                    : 'text-zinc-500 hover:text-zinc-200'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </nav>
+        </div>
         <div className="flex items-center gap-4 text-xs text-zinc-500">
           <span data-testid="count-working">
             <span className="font-semibold text-emerald-400">{statusCounts.working}</span> working
@@ -70,10 +101,12 @@ function App(): React.JSX.Element {
 
       <div className="flex min-h-0 flex-1">
         <main className="flex min-w-0 flex-1 flex-col">
-          {phase === 'loading' && (
+          {/* The ticking clock doubles as History's refresh signal. */}
+          {view === 'history' && <HistoryView refreshToken={now} />}
+          {view === 'board' && phase === 'loading' && (
             <p className="p-6 text-sm text-zinc-600">Scanning for agent sessions…</p>
           )}
-          {phase === 'error' && (
+          {view === 'board' && phase === 'error' && (
             <div
               data-testid="error-state"
               className="m-6 rounded-lg border border-red-900 bg-red-950/40 p-4"
@@ -82,8 +115,8 @@ function App(): React.JSX.Element {
               <p className="mt-1 text-xs text-red-400/80">{errorMessage}</p>
             </div>
           )}
-          {phase === 'ready' && sessionList.length === 0 && <Onboarding />}
-          {phase === 'ready' && sessionList.length > 0 && (
+          {view === 'board' && phase === 'ready' && sessionList.length === 0 && <Onboarding />}
+          {view === 'board' && phase === 'ready' && sessionList.length > 0 && (
             <>
               <div className="flex items-center gap-2 border-b border-zinc-900 px-6 py-2">
                 {FILTERS.map(({ value, label }) => (
@@ -124,7 +157,7 @@ function App(): React.JSX.Element {
           )}
         </main>
 
-        {selected !== undefined && selectedKey !== null && (
+        {view === 'board' && selected !== undefined && selectedKey !== null && (
           <DetailPanel
             sessionKey={selectedKey}
             state={selected}

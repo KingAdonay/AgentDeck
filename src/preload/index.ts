@@ -2,6 +2,8 @@ import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 import {
   IpcChannels,
   type EventsResponse,
+  type HistoryListResponse,
+  type HistoryQuery,
   type RevealPayload,
   type SessionsUpdatedPayload,
   type SnapshotResponse,
@@ -54,6 +56,10 @@ const api = {
         ipcRenderer.removeListener(IpcChannels.workspaceUpdated, listener)
       }
     }
+  },
+  history: {
+    list: (query: HistoryQuery): Promise<HistoryListResponse> =>
+      ipcRenderer.invoke(IpcChannels.historyList, query) as Promise<HistoryListResponse>
   }
 } as const
 

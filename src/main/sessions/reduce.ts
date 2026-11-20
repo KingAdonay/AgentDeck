@@ -1,4 +1,4 @@
-import type { AgentEvent, SessionState, TokenUsage } from '../../shared/domain'
+import type { AgentEvent, FileEdit, SessionState, TokenUsage } from '../../shared/domain'
 import type { AgentSession } from '../agents/types'
 
 export type { SessionState } from '../../shared/domain'
@@ -12,6 +12,7 @@ export function createSessionState(session: AgentSession): SessionState {
     projectPath: session.projectPathGuess,
     title: null,
     lastPrompt: null,
+    firstPrompt: null,
     lastAssistantText: null,
     model: null,
     gitBranch: null,
@@ -26,6 +27,9 @@ export function createSessionState(session: AgentSession): SessionState {
       cacheReadInputTokens: 0,
       cacheCreationInputTokens: 0
     },
+    linesAdded: 0,
+    linesRemoved: 0,
+    filesTouched: [],
     lastUsageMessageId: null
   }
 }
@@ -55,6 +59,7 @@ export function applyEvent(state: SessionState, event: AgentEvent): SessionState
       next.userMessageCount += 1
       // Doubles as the card title for agents without title metadata (Codex).
       next.lastPrompt = event.text
+      next.firstPrompt ??= event.text
       next.projectPath = event.cwd ?? next.projectPath
       next.gitBranch = event.gitBranch ?? next.gitBranch
       break
@@ -67,8 +72,10 @@ export function applyEvent(state: SessionState, event: AgentEvent): SessionState
       next.toolCallCount += 1
       next.model = event.model ?? next.model
       countUsage(next, event.messageId, event.usage)
+      countEdits(next, event.edits)
       break
     case 'tool-result':
+      countEdits(next, event.edits)
       break
   }
   return next
@@ -97,4 +104,18 @@ function countUsage(
     cacheCreationInputTokens: state.usage.cacheCreationInputTokens + usage.cacheCreationInputTokens
   }
   state.lastUsageMessageId = messageId ?? null
+}
+
+function countEdits(state: SessionState, edits: readonly FileEdit[] | undefined): void {
+  if (!edits || edits.length === 0) return
+  let touched: string[] | null = null
+  for (const edit of edits) {
+    state.linesAdded += edit.added
+    state.linesRemoved += edit.removed
+    if (!state.filesTouched.includes(edit.path) && !touched?.includes(edit.path)) {
+      touched ??= []
+      touched.push(edit.path)
+    }
+  }
+  if (touched) state.filesTouched = [...state.filesTouched, ...touched]
 }
